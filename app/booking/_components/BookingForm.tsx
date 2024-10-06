@@ -1,28 +1,21 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { Step1DropOff } from './Step1DropOff'
 import { Step2PickUp } from './Step2PickUp'
 import { Step3Confirmation } from './Step3Confirmation'
 import { submitBookingAction } from '../actions'
+import { useServerAction } from 'zsa-react'
+
 
 interface Location {
   id: string;
   name: string;
   area: 'hongkong' | 'mainland';
-}
-
-export interface BookingData {
-  pickupLocation: string;
-  dropoffLocation: string;
-  pickupTime: string;
-  isRoundTrip: boolean;
-  returnPickupLocation?: string;
-  returnDropoffLocation?: string;
-  returnPickupTime?: string;
-  vehicleType: string;
 }
 
 const locations: Location[] = [
@@ -35,134 +28,111 @@ const locations: Location[] = [
 ]
 
 export function BookingForm() {
-  const [bookingData, setBookingData] = useState<BookingData>({
-    pickupLocation: '',
-    dropoffLocation: '',
-    pickupTime: '',
-    isRoundTrip: false,
-    returnPickupLocation: '',
-    returnDropoffLocation: '',
-    returnPickupTime: '',
-    vehicleType: '',
-  })
   const [step, setStep] = useState(1)
-  const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
-  useEffect(() => {
-    if (bookingData.isRoundTrip && bookingData.pickupLocation && bookingData.dropoffLocation) {
-      setBookingData(prev => ({
-        ...prev,
-        returnPickupLocation: prev.dropoffLocation,
-        returnDropoffLocation: prev.pickupLocation,
-      }))
-    } else if (!bookingData.isRoundTrip) {
-      setBookingData(prev => ({
-        ...prev,
-        returnPickupLocation: '',
-        returnDropoffLocation: '',
-        returnPickupTime: '',
-      }))
-    }
-  }, [bookingData.isRoundTrip, bookingData.pickupLocation, bookingData.dropoffLocation])
+  const { execute, isPending, error, reset } = useServerAction(submitBookingAction, {
+    onError({ err }) {
+      toast({
+        title: 'Booking Failed',
+        description: err.message,
+        variant: 'destructive',
+      })
+    },
+    onSuccess(result) {
+      toast({
+        title: "Booking Confirmed",
+        description: `Your booking ID is ${result.bookingId}`,
+      })
+      // Reset form or navigate to confirmation page
+      // For example: router.push(`/booking/confirmation/${result.bookingId}`)
+    },
+  })
 
-  const handleLocationSelect = (locationType: keyof BookingData, locationId: string) => {
-    setBookingData(prev => ({ ...prev, [locationType]: locationId }))
+  const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+    resolver: zodResolver(submitBookingAction.inputSchema),
+    defaultValues: {
+      pickupLocation: '',
+      dropoffLocation: '',
+      pickupTime: '',
+      isRoundTrip: false,
+      returnPickupLocation: '',
+      returnDropoffLocation: '',
+      returnPickupTime: '',
+      vehicleType: '',
+    }
+  })
+
+  const watchIsRoundTrip = watch('isRoundTrip')
+  const watchPickupLocation = watch('pickupLocation')
+  const watchDropoffLocation = watch('dropoffLocation')
+
+  const handleLocationSelect = (locationType: string, locationId: string) => {
+    setValue(locationType as any, locationId)
     if (locationType === 'dropoffLocation' && step === 1) {
       setStep(2)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setBookingData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleSelectChange = (name: string, value: string) => {
-    setBookingData(prev => ({ ...prev, [name]: value }))
-  }
-
   const handleSwitchChange = (checked: boolean) => {
-    setBookingData(prev => ({ ...prev, isRoundTrip: checked }))
+    setValue('isRoundTrip', checked)
+    if (checked && watchPickupLocation && watchDropoffLocation) {
+      setValue('returnPickupLocation', watchDropoffLocation)
+      setValue('returnDropoffLocation', watchPickupLocation)
+    } else if (!checked) {
+      setValue('returnPickupLocation', '')
+      setValue('returnDropoffLocation', '')
+      setValue('returnPickupTime', '')
+    }
   }
 
   const handleResetReturnTrip = () => {
-    setBookingData(prev => ({
-      ...prev,
-      returnPickupLocation: prev.dropoffLocation,
-      returnDropoffLocation: prev.pickupLocation,
-      returnPickupTime: '',
-    }))
+    setValue('returnPickupLocation', watchDropoffLocation)
+    setValue('returnDropoffLocation', watchPickupLocation)
+    setValue('returnPickupTime', '')
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      const result = await submitBookingAction(bookingData)
-      
-      if (result.error) {
-        toast({
-          title: "Booking Failed",
-          description: result.error,
-        })
-      } else {
-        toast({
-          title: "Booking Confirmed",
-          description: `Your booking ID is ${result.bookingId}`,
-        })
-        // Reset form or navigate to confirmation page
-        // For example: router.push(`/booking/confirmation/${result.bookingId}`)
-      }
-    } catch (error) {
-      toast({
-        title: "Booking Failed",
-        description: "There was an error creating your booking. Please try again.",
-      })
-    } finally {
-      setIsLoading(false)
-    }
+  const onSubmit = async (data: any) => {
+    await execute(data)
   }
 
   const dropoffOptions = locations
-  const pickupOptions = locations.filter(loc => loc.id !== bookingData.dropoffLocation && loc.area !== locations.find(l => l.id === bookingData.dropoffLocation)?.area)
+  const pickupOptions = locations.filter(loc => loc.id !== watchDropoffLocation && loc.area !== locations.find(l => l.id === watchDropoffLocation)?.area)
   const returnPickupOptions = locations
-  const returnDropoffOptions = locations.filter(loc => loc.id !== bookingData.returnPickupLocation && loc.area !== locations.find(l => l.id === bookingData.returnPickupLocation)?.area)
+  const returnDropoffOptions = locations.filter(loc => loc.id !== watch('returnPickupLocation') && loc.area !== locations.find(l => l.id === watch('returnPickupLocation'))?.area)
 
   const isNextButtonDisabled = () => {
-    if (!bookingData.pickupLocation || !bookingData.pickupTime) {
+    if (!watchPickupLocation || !watch('pickupTime')) {
       return true
     }
-    if (bookingData.isRoundTrip && !bookingData.returnPickupTime) {
+    if (watchIsRoundTrip && !watch('returnPickupTime')) {
       return true
     }
     return false
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {step === 1 && (
         <Step1DropOff
           dropoffOptions={dropoffOptions}
-          selectedDropoff={bookingData.dropoffLocation}
+          selectedDropoff={watchDropoffLocation}
           onLocationSelect={handleLocationSelect}
         />
       )}
       {step === 2 && (
         <>
           <Step2PickUp
-            bookingData={bookingData}
+            control={control}
+            errors={errors}
             locations={locations}
             pickupOptions={pickupOptions}
             returnPickupOptions={returnPickupOptions}
             returnDropoffOptions={returnDropoffOptions}
             onLocationSelect={handleLocationSelect}
-            onInputChange={handleInputChange}
             onSwitchChange={handleSwitchChange}
             onResetReturnTrip={handleResetReturnTrip}
             setStep={setStep}
-            setBookingData={setBookingData}
           />
           <Button
             type="button"
@@ -176,11 +146,9 @@ export function BookingForm() {
       )}
       {step === 3 && (
         <Step3Confirmation
-          onSelectChange={handleSelectChange}
+          control={control}
           onBack={() => setStep(2)}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-          selectedVehicle={bookingData.vehicleType}
+          isLoading={isPending}
         />
       )}
     </form>
