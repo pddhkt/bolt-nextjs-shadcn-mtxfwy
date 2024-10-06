@@ -22,7 +22,7 @@ export default function LoginPage() {
         toast({
           title: "Login Failed",
           description: result.error,
-          variant: "destructive",
+     
         })
       } else {
         toast({
@@ -35,7 +35,7 @@ export default function LoginPage() {
       toast({
         title: "Login Failed",
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+    
       })
     }
   }

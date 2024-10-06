@@ -1,9 +1,9 @@
 "use server"
 
-import { cookies } from 'next/headers'
+import { setAuthCookie, getAuthSessionFromHeader } from '@/lib/cookies'
 
 export async function signupAction(formData: { email: string; password: string }) {
-  const response = await fetch('http://127.0.0.1:8787/signup', {
+  const response = await fetch('http://127.0.0.1:8787/api/auth/signup', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -13,9 +13,13 @@ export async function signupAction(formData: { email: string; password: string }
 
   if (response.ok) {
     const setCookieHeader = response.headers.get('Set-Cookie')
-    if (setCookieHeader) {
-      cookies().set(setCookieHeader)
+    const authSession = getAuthSessionFromHeader(setCookieHeader)
+
+    if (!authSession) {
+      return { error: 'Sign up failed' }
     }
+
+    setAuthCookie(authSession)
     return { success: true }
   } else {
     const errorData = await response.json()

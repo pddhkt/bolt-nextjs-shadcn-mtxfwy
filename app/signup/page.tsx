@@ -23,7 +23,8 @@ export default function SignUpPage() {
         toast({
           title: "Sign Up Failed",
           description: result.error,
-          variant: "destructive",
+          
+          // variant: "destructive",
         })
       } else {
         toast({
@@ -36,7 +37,7 @@ export default function SignUpPage() {
       toast({
         title: "Sign Up Failed",
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        // variant: "destructive",
       })
     }
   }

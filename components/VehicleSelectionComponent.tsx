@@ -1,12 +1,12 @@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 
-interface VehicleSelectionComponentProps {
+interface vehicleTypeComponentProps {
   vehicle: string
   setVehicle: (vehicle: string) => void
 }
 
-export default function VehicleSelectionComponent({ vehicle, setVehicle }: VehicleSelectionComponentProps) {
+export default function vehicleTypeComponent({ vehicle, setVehicle }: vehicleTypeComponentProps) {
   return (
     <div className="space-y-2">
       <Label>Select Vehicle Type</Label>
