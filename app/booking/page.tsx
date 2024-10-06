@@ -1,8 +1,4 @@
-
-
-import { BookingForm } from "./_components/BookingForm"
-
-
+import { BookingForm } from "./_components/BookingForm";
 
 export default async function BookingPage() {
   return (
@@ -10,5 +6,5 @@ export default async function BookingPage() {
       <h1 className="text-3xl font-bold mb-6">Book Your Ride</h1>
       <BookingForm />
     </div>
-  )
+  );
 }

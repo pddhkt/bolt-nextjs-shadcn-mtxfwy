@@ -1,15 +1,15 @@
-import { Clock, Repeat, RotateCcw } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { LocationCard } from './LocationCard'
-import { SelectionBox } from './SelectionBox'
-import { BookingData } from './BookingForm'
+import { Clock, Repeat, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { LocationCard } from "./LocationCard";
+import { SelectionBox } from "./SelectionBox";
+import { BookingData } from "./BookingForm";
 
 interface Location {
   id: string;
   name: string;
-  area: 'hongkong' | 'mainland';
+  area: "hongkong" | "mainland";
 }
 
 interface Step2PickUpProps {
@@ -18,12 +18,16 @@ interface Step2PickUpProps {
   pickupOptions: Location[];
   returnPickupOptions: Location[];
   returnDropoffOptions: Location[];
-  onLocationSelect: (locationType: keyof BookingData, locationId: string) => void;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onLocationSelect: (
+    locationType: keyof BookingData,
+    locationId: string
+  ) => void;
+  setPickupTime: (time: string) => void;
+  setIsRoundTrip: (isRoundTrip: boolean) => void;
+  setReturnPickupTime: (time: string) => void;
   onSwitchChange: (checked: boolean) => void;
   onResetReturnTrip: () => void;
   setStep: (step: number) => void;
-  setBookingData: React.Dispatch<React.SetStateAction<BookingData>>;
 }
 
 export function Step2PickUp({
@@ -33,39 +37,48 @@ export function Step2PickUp({
   returnPickupOptions,
   returnDropoffOptions,
   onLocationSelect,
-  onInputChange,
+  setPickupTime,
+  setIsRoundTrip,
+  setReturnPickupTime,
   onSwitchChange,
   onResetReturnTrip,
   setStep,
-  setBookingData
 }: Step2PickUpProps) {
-  const selectedDropoffLocation = locations.find(loc => loc.id === bookingData.dropoffLocation)
-  const selectedPickupLocation = locations.find(loc => loc.id === bookingData.pickupLocation)
-  const selectedReturnPickupLocation = locations.find(loc => loc.id === bookingData.returnPickupLocation)
-  const selectedReturnDropoffLocation = locations.find(loc => loc.id === bookingData.returnDropoffLocation)
+  const selectedDropoffLocation = locations.find(
+    (loc) => loc.id === bookingData.dropoffLocation
+  );
+  const selectedPickupLocation = locations.find(
+    (loc) => loc.id === bookingData.pickupLocation
+  );
+  const selectedReturnPickupLocation = locations.find(
+    (loc) => loc.id === bookingData.returnPickupLocation
+  );
+  const selectedReturnDropoffLocation = locations.find(
+    (loc) => loc.id === bookingData.returnDropoffLocation
+  );
 
   return (
     <div className="space-y-4">
       <SelectionBox
         title="Destination"
-        value={selectedDropoffLocation?.name || 'Select destination'}
+        value={selectedDropoffLocation?.name || "Select destination"}
         onClick={() => setStep(1)}
       />
       <h2 className="text-xl font-semibold mb-4">Where are you now?</h2>
       {bookingData.pickupLocation ? (
         <SelectionBox
           title="Pick-up Point"
-          value={selectedPickupLocation?.name || 'Select pick-up point'}
-          onClick={() => setBookingData(prev => ({ ...prev, pickupLocation: '' }))}
+          value={selectedPickupLocation?.name || "Select pick-up point"}
+          onClick={() => onLocationSelect("pickupLocation", "")}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pickupOptions.map(location => (
+          {pickupOptions.map((location) => (
             <LocationCard
               key={location.id}
               location={location}
               selected={bookingData.pickupLocation === location.id}
-              onClick={() => onLocationSelect('pickupLocation', location.id)}
+              onClick={() => onLocationSelect("pickupLocation", location.id)}
             />
           ))}
         </div>
@@ -74,9 +87,8 @@ export function Step2PickUp({
         <Clock className="w-5 h-5" />
         <Input
           type="datetime-local"
-          name="pickupTime"
           value={bookingData.pickupTime}
-          onChange={onInputChange}
+          onChange={(e) => setPickupTime(e.target.value)}
           required
         />
       </div>
@@ -86,7 +98,10 @@ export function Step2PickUp({
           <span>Round Trip</span>
           <Switch
             checked={bookingData.isRoundTrip}
-            onCheckedChange={onSwitchChange}
+            onCheckedChange={(checked) => {
+              setIsRoundTrip(checked);
+              onSwitchChange(checked);
+            }}
           />
         </div>
         {bookingData.isRoundTrip && (
@@ -103,19 +118,28 @@ export function Step2PickUp({
             {bookingData.returnPickupLocation ? (
               <SelectionBox
                 title="Return Pick-up Point"
-                value={selectedReturnPickupLocation?.name || 'Select return pick-up point'}
-                onClick={() => setBookingData(prev => ({ ...prev, returnPickupLocation: '' }))}
+                value={
+                  selectedReturnPickupLocation?.name ||
+                  "Select return pick-up point"
+                }
+                onClick={() => onLocationSelect("returnPickupLocation", "")}
               />
             ) : (
               <div>
-                <h4 className="text-sm font-medium mb-2">Return Pick-up Point</h4>
+                <h4 className="text-sm font-medium mb-2">
+                  Return Pick-up Point
+                </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {returnPickupOptions.map(location => (
+                  {returnPickupOptions.map((location) => (
                     <LocationCard
                       key={location.id}
                       location={location}
-                      selected={bookingData.returnPickupLocation === location.id}
-                      onClick={() => onLocationSelect('returnPickupLocation', location.id)}
+                      selected={
+                        bookingData.returnPickupLocation === location.id
+                      }
+                      onClick={() =>
+                        onLocationSelect("returnPickupLocation", location.id)
+                      }
                     />
                   ))}
                 </div>
@@ -124,19 +148,28 @@ export function Step2PickUp({
             {bookingData.returnDropoffLocation ? (
               <SelectionBox
                 title="Return Drop-off Point"
-                value={selectedReturnDropoffLocation?.name || 'Select return drop-off point'}
-                onClick={() => setBookingData(prev => ({ ...prev, returnDropoffLocation: '' }))}
+                value={
+                  selectedReturnDropoffLocation?.name ||
+                  "Select return drop-off point"
+                }
+                onClick={() => onLocationSelect("returnDropoffLocation", "")}
               />
             ) : (
               <div>
-                <h4 className="text-sm font-medium mb-2">Return Drop-off Point</h4>
+                <h4 className="text-sm font-medium mb-2">
+                  Return Drop-off Point
+                </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {returnDropoffOptions.map(location => (
+                  {returnDropoffOptions.map((location) => (
                     <LocationCard
                       key={location.id}
                       location={location}
-                      selected={bookingData.returnDropoffLocation === location.id}
-                      onClick={() => onLocationSelect('returnDropoffLocation', location.id)}
+                      selected={
+                        bookingData.returnDropoffLocation === location.id
+                      }
+                      onClick={() =>
+                        onLocationSelect("returnDropoffLocation", location.id)
+                      }
                     />
                   ))}
                 </div>
@@ -146,9 +179,8 @@ export function Step2PickUp({
               <h4 className="text-sm font-medium mb-2">Return Date</h4>
               <Input
                 type="datetime-local"
-                name="returnPickupTime"
                 value={bookingData.returnPickupTime}
-                onChange={onInputChange}
+                onChange={(e) => setReturnPickupTime(e.target.value)}
                 required={bookingData.isRoundTrip}
               />
             </div>
@@ -156,5 +188,5 @@ export function Step2PickUp({
         </div>
       )}
     </div>
-  )
+  );
 }

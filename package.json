@@ -66,6 +66,10 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "5.2.2",
     "vaul": "^0.9.9",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "zsa": "^0.6.0",
+    "zsa-openapi": "^0.3.1",
+    "zsa-react": "^0.2.3",
+    "zsa-react-query": "^0.2.1"
   }
 }
