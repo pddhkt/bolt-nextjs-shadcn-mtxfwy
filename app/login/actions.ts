@@ -3,7 +3,7 @@
 import { setAuthCookie, getAuthSessionFromHeader } from '@/lib/cookies'
 
 export async function loginAction(formData: { email: string; password: string }) {
-  const response = await fetch('http://127.0.0.1:8787/login', {
+  const response = await fetch('http://127.0.0.1:8787/api/auth/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
