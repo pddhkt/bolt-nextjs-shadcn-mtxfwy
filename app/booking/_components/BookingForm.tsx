@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+
 import { Step1DropOff } from "./Step1DropOff";
 import { Step2PickUp } from "./Step2PickUp";
 import { Step3Confirmation } from "./Step3Confirmation";
@@ -12,6 +12,7 @@ import { submitBookingAction } from "../actions";
 import { useServerAction } from "zsa-react";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 interface Location {
   id: string;
@@ -63,7 +64,7 @@ export function BookingForm() {
         toast({
           title: "Booking Failed",
           description: err.message,
-          // variant: 'destructive',
+          variant: 'destructive',
         });
       },
       onSuccess(result) {
@@ -77,10 +78,6 @@ export function BookingForm() {
       },
     }
   );
-
-  // useEffect(() => {
-  //   console.log("result:", data);
-  // }, [data]);
 
   const {
     control,

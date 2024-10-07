@@ -1,47 +1,50 @@
-"use client"
-
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/hooks/use-toast'
+import { BookingInfo } from './_components/BookingInfo'
+import { CancelBookingButton } from './_components/CancelBookingButton'
+import { getBookingById } from '@/server/bookings'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { useToast } from "@/components/ui/use-toast"
 
-export default function BookingDetailsPage() {
-  const params = useParams()
-  const { id } = params
-  const [booking, setBooking] = useState({
-    id: id,
-    date: '2023-06-15',
-    from: 'Los Angeles',
-    to: 'San Francisco',
-    status: 'Upcoming',
-    vehicle: 'Sedan',
-    price: '$120',
-  })
-  const { toast } = useToast()
+export interface Booking {
+  id: number,
+  userId: string,
+  pickupLocation: string,
+  dropoffLocation: string,
+  pickupTime: string,
+  isRoundTrip: boolean,
+  returnPickupLocation: string,
+  returnDropoffLocation: string,
+  returnPickupTime: string | null,
+  vehicleType: string,
+  status: string,
+  createdAt: string | null,
+}
 
-  const handleCancellation = () => {
-    // Here you would typically call an API to cancel the booking
-    setBooking({ ...booking, status: 'Cancelled' })
-    toast({
-      title: "Booking Cancelled",
-      description: `Your booking ${id} has been cancelled.`,
-    })
+export default async function BookingDetailsPage({
+  params
+}: {
+  params: {
+    id: string
   }
+}) {
+
+    const id = params.id
+
+    const booking :Booking = await getBookingById(id)
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-2xl font-bold">Booking Details</h1>
-      <div className="space-y-2">
-        <p><strong>Booking ID:</strong> {booking.id}</p>
-        <p><strong>Date:</strong> {booking.date}</p>
-        <p><strong>From:</strong> {booking.from}</p>
-        <p><strong>To:</strong> {booking.to}</p>
-        <p><strong>Status:</strong> {booking.status}</p>
-        <p><strong>Vehicle:</strong> {booking.vehicle}</p>
-        <p><strong>Price:</strong> {booking.price}</p>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Booking Details</h1>
+        <Button asChild variant="outline">
+          <Link href="/booking-history">Back to Booking History</Link>
+        </Button>
       </div>
+      <BookingInfo booking={booking} />
       {booking.status === 'Upcoming' && (
-        <Button onClick={handleCancellation}>Cancel Booking</Button>
+        <CancelBookingButton bookingId={booking.id.toString()} />
       )}
     </div>
   )

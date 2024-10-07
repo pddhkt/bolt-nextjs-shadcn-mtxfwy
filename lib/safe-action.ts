@@ -25,20 +25,20 @@ function shapeErrors({ err }: any) {
 export const unauthenticatedAction = createServerActionProcedure()
   .experimental_shapeError(shapeErrors)
   .handler(async () => {
-    return { user: undefined };
+    return { session: undefined };
   });
 
-// export const authenticatedAction = createServerActionProcedure()
-//   .experimental_shapeError(shapeErrors)
-//   .handler(async () => {
-//     const cookieStore = cookies();
+export const authenticatedAction = createServerActionProcedure()
+  .experimental_shapeError(shapeErrors)
+  .handler(async () => {
+    const cookieStore = cookies();
 
-//     const authSession = cookieStore.get("auth_session");
+    const authSession = cookieStore.get("auth_session");
 
-//     if (!authSession) {
-//       return { error: "User is not authenticated" };
-//     }
-//     return {
-//       session: authSession.value,
-//     };
-//   });
+    if (!authSession) {
+      return { error: "User is not authenticated" };
+    }
+    return {
+      session: authSession.value,
+    };
+  });
